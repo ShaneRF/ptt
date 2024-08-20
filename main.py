@@ -64,9 +64,47 @@ for u in b:
     print(u)
     
 
-def parser_article_content():
-    return None
+def parser_article_content(url_list):
+    ptt_data = []
+    for url_ in url_list:
+        if url_ != None:
+            article_url = 'https://www.ptt.cc' + url_
+            page_data = download_html(article_url, headers)
+            page_html_code = BeautifulSoup(page_data.content, features="html.parser")
+            try:
+                article_data = page_html_code.find_all('span', class_="article-meta-value")
+                article_author = article_data[0].contents[0]
+                article_title = article_data[2].contents[0]
+                article_time = article_data[3].contents[0]
+                article_body = page_html_code.find('div', id='main-content').contents[4]
+                article_row = {
+                    'url': article_url,
+                    'title': article_title,
+                    'author': article_author,
+                    'time': article_time,
+                    'content': article_body
+                }
+                ptt_data.append(article_row)
+            except:
+                print("parser error:", article_url)
+   
+    time.sleep(1)
+    return ptt_data
+
+a = download_html(target, headers)
+b = parser_board_urls(a)
+c = parser_article_content(b)
+print(c)
+
+def export_json(data):
+    ptt_df = pandas.DataFrame(data)
+    ptt_df.to_json("ptt.json")
+    return True
 
 ##Test
-a=download_html(target,headers)
-print(a.content)
+## Test
+a = download_html(target, headers)
+b = parser_board_urls(a)
+c = parser_article_content(b)
+export_json(c)
+print(c)
